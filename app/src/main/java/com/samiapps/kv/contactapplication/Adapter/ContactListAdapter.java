@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.samiapps.kv.contactapplication.Models.Contact;
 import com.samiapps.kv.contactapplication.R;
 
@@ -37,7 +38,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
        Contact contact= contactList.get(i);
        viewHolder.contactNameTextView.setText(contact.getFirstName()+" "+contact.getLastName());
         Log.d("checkname",contact.getFirstName());
-        Glide.with(context).load(contact.getAvatar()).into(viewHolder.contactImageView);
+        Glide.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
 
 
 

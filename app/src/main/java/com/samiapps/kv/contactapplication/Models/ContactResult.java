@@ -11,6 +11,29 @@ import java.util.List;
 public class ContactResult {
     @JsonProperty("total")
     private Integer total;
+    @JsonProperty("page")
+    private Integer page;
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
+
+    public Integer getTotal_pages() {
+        return total_pages;
+    }
+
+    public void setTotal_pages(Integer total_pages) {
+        this.total_pages = total_pages;
+    }
+
+    @JsonProperty("total_pages")
+
+    private Integer total_pages;
+
 
     public Integer getTotal() {
         return total;
