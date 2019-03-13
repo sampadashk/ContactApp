@@ -26,17 +26,14 @@ import com.samiapps.kv.contactapplication.Utility.PaginationScrollListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     RecyclerView contactListRecyclerView;
-    List<Contact> contactList;
+    ArrayList<Contact> contactList;
     ContactListAdapter contactListAdapter;
     GlobalProvider globalProvider;
     final String tag_per_page="per_page";
-    int totalItems=5;
+    int totalItems=10;
     int page=1;
     int TOTAL_PAGES=1;
     
@@ -49,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("oncreatecc","oncreate");
         setContentView(R.layout.activity_main);
         contactListRecyclerView=(RecyclerView)findViewById(R.id.recycler_contact_list);
         contactList=new ArrayList<>();
@@ -88,11 +86,13 @@ public class MainActivity extends AppCompatActivity {
                 return isLoading;
             }
         });
-
         loadContacts();
 
 
+
+
     }
+
 
     private void loadNextContacts() {
         String url= Constants.base_url+"?"+tag_per_page+"="+totalItems+"&page="+page;
@@ -107,9 +107,10 @@ public class MainActivity extends AppCompatActivity {
                     JsonParser jsonParser = jsonFactory.createParser(response);
                     ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
                     contactList.addAll(contactResult.getData());
+                    contactListAdapter.notifyDataSetChanged();
                     Log.d("contactlistsize",contactList.size()+"");
 
-                    contactListAdapter.notifyDataSetChanged();
+
                     Log.d("totalpages",TOTAL_PAGES+"");
                     Log.d("getpage",contactResult.getPage()+"");
                    // TOTAL_PAGES=contactResult.getTotal_pages();
@@ -145,8 +146,16 @@ public class MainActivity extends AppCompatActivity {
         globalProvider.addRequest(commonRequest);
 
     }
+    /*
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("contactListKey",  contactList);
+        super.onSaveInstanceState(outState);
+    }
+    */
 
     private void loadContacts() {
+        Log.d("loadcontactcalled","here");
         String url= Constants.base_url+"?"+tag_per_page+"="+totalItems;
        // url+="?"+"per_page="+10;
         StringRequest commonRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {

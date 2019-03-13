@@ -1,6 +1,7 @@
 package com.samiapps.kv.contactapplication.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.samiapps.kv.contactapplication.Activities.ContactDetail;
 import com.samiapps.kv.contactapplication.Models.Contact;
 import com.samiapps.kv.contactapplication.R;
 
@@ -35,10 +37,18 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
-       Contact contact= contactList.get(i);
+       final Contact contact= contactList.get(i);
        viewHolder.contactNameTextView.setText(contact.getFirstName()+" "+contact.getLastName());
         Log.d("checkname",contact.getFirstName());
         Glide.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
+        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(context,ContactDetail.class);
+                intent.putExtra("contact",contact);
+                context.startActivity(intent);
+            }
+        });
 
 
 
