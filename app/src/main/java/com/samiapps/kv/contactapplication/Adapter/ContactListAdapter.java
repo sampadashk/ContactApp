@@ -16,6 +16,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.samiapps.kv.contactapplication.Activities.ContactDetail;
 import com.samiapps.kv.contactapplication.Models.Contact;
 import com.samiapps.kv.contactapplication.R;
+import com.samiapps.kv.contactapplication.Utility.GlideApp;
 
 import java.util.List;
 
@@ -40,7 +41,8 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
        final Contact contact= contactList.get(i);
        viewHolder.contactNameTextView.setText(contact.getFirstName()+" "+contact.getLastName());
         Log.d("checkname",contact.getFirstName());
-        Glide.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
+        GlideApp.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
+       // Glide.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

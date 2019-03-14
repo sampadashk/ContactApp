@@ -1,11 +1,19 @@
 package com.samiapps.kv.contactapplication.Activities;
 
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -17,6 +25,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samiapps.kv.contactapplication.Adapter.ContactListAdapter;
+import com.samiapps.kv.contactapplication.Database.ContactContract;
 import com.samiapps.kv.contactapplication.Helper.GlobalProvider;
 import com.samiapps.kv.contactapplication.Models.Contact;
 import com.samiapps.kv.contactapplication.Models.ContactResult;
@@ -26,6 +35,7 @@ import com.samiapps.kv.contactapplication.Utility.PaginationScrollListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     RecyclerView contactListRecyclerView;
@@ -36,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     int totalItems=10;
     int page=1;
     int TOTAL_PAGES=1;
+    ImageView addImageView;
     
     private boolean isLoading = false;
     private boolean isLastPage = false;
@@ -49,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("oncreatecc","oncreate");
         setContentView(R.layout.activity_main);
         contactListRecyclerView=(RecyclerView)findViewById(R.id.recycler_contact_list);
+        addImageView=(ImageView) findViewById(R.id.add);
         contactList=new ArrayList<>();
         globalProvider=GlobalProvider.getGlobalProviderInstance(this);
         contactListAdapter=new ContactListAdapter(this,contactList);
@@ -86,7 +98,15 @@ public class MainActivity extends AppCompatActivity {
                 return isLoading;
             }
         });
+        addImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(MainActivity.this,AddContactActivity.class);
+                startActivity(intent);
+            }
+        });
         loadContacts();
+
 
 
 
@@ -106,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JsonParser jsonParser = jsonFactory.createParser(response);
                     ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
+                    Log.d("checknewsize",contactResult.getData().size()+"");
                     contactList.addAll(contactResult.getData());
                     contactListAdapter.notifyDataSetChanged();
                     Log.d("contactlistsize",contactList.size()+"");
@@ -113,6 +134,20 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("totalpages",TOTAL_PAGES+"");
                     Log.d("getpage",contactResult.getPage()+"");
+                    ContentValues[] bulkToInsert;
+                    List<ContentValues> mValueList = new ArrayList<ContentValues>();
+                    for(Contact contact:contactResult.getData())
+                    {
+                        ContentValues mNewValues = new ContentValues();
+                        mNewValues.put(ContactContract.ContactC.Column_Contactid,contact.getId() );
+                        mNewValues.put(ContactContract.ContactC.COLUMN_FirstName,contact.getFirstName() );
+                        mNewValues.put(ContactContract.ContactC.COLUMN_LastName,contact.getLastName() );
+                        mNewValues.put(ContactContract.ContactC.COLUMN_Image,contact.getAvatar() );
+                        mValueList.add(mNewValues);
+                    }
+                    bulkToInsert = new ContentValues[mValueList.size()];
+                    mValueList.toArray(bulkToInsert);
+                    getContentResolver().bulkInsert(ContactContract.ContactC.Content_Uri, bulkToInsert);
                    // TOTAL_PAGES=contactResult.getTotal_pages();
                     if(contactResult.getPage()<TOTAL_PAGES)
                     {
@@ -140,7 +175,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
 
-
+                String message=globalProvider.getErrorMessage(error);
+                Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
             }
         });
         globalProvider.addRequest(commonRequest);
@@ -170,10 +206,26 @@ public class MainActivity extends AppCompatActivity {
                     contactList.addAll(contactResult.getData());
                     Log.d("contactlistsize",contactList.size()+"");
 
+
                     contactListAdapter.notifyDataSetChanged();
+                    ContentValues[] bulkToInsert;
+                    List<ContentValues> mValueList = new ArrayList<ContentValues>();
+                    for(Contact contact:contactList)
+                    {
+                        ContentValues mNewValues = new ContentValues();
+                        mNewValues.put(ContactContract.ContactC.Column_Contactid,contact.getId() );
+                        mNewValues.put(ContactContract.ContactC.COLUMN_FirstName,contact.getFirstName() );
+                        mNewValues.put(ContactContract.ContactC.COLUMN_LastName,contact.getLastName() );
+                        mNewValues.put(ContactContract.ContactC.COLUMN_Image,contact.getAvatar() );
+                        mValueList.add(mNewValues);
+                    }
+                    bulkToInsert = new ContentValues[mValueList.size()];
+                    mValueList.toArray(bulkToInsert);
+                    getContentResolver().bulkInsert(ContactContract.ContactC.Content_Uri, bulkToInsert);
                     TOTAL_PAGES=contactResult.getTotal_pages();
                     if(contactResult.getPage()<contactResult.getTotal_pages())
                     {
+
 
                     }
                     else
@@ -195,13 +247,41 @@ public class MainActivity extends AppCompatActivity {
             }
         }, new Response.ErrorListener() {
             @Override
-            public void onErrorResponse(VolleyError error) {
+            public void onErrorResponse(VolleyError error)
+            {
+                String message=globalProvider.getErrorMessage(error);
+                Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
 
 
             }
         });
         globalProvider.addRequest(commonRequest);
 
+
+    }
+    public void onStop()
+    {
+        super.onStop();
+        Uri uri = ContactContract.ContactC.Content_Uri;
+        String[] projection = new String[] {ContactContract.ContactC.Column_Contactid, ContactContract.ContactC.COLUMN_FirstName,ContactContract.ContactC.COLUMN_LastName,ContactContract.ContactC.COLUMN_Image};
+        String selection = null;
+        String[] selectionArgs = null;
+        String sortOrder = null;
+        Cursor cursor = getContentResolver().query(uri, projection, selection, selectionArgs,
+                sortOrder);
+        if (cursor != null) {
+            cursor.moveToFirst();
+            String name;
+            for (int i = 0; i < cursor.getCount(); i++){
+                name = cursor.getString(cursor
+                        .getColumnIndexOrThrow(ContactContract.ContactC.COLUMN_FirstName));
+                Log.d("name",name);
+
+                cursor.moveToNext();
+            }
+            // always close the cursor
+            cursor.close();
+        }
 
     }
 }

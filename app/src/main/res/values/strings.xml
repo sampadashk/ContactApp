@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">ContactApplication</string>
+    <string name="enter_first_name">Please Enter First Name</string>
+    <string name="enter_last_name">Please Enter Last Name</string>
 </resources>
