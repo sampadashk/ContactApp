@@ -1,6 +1,8 @@
 package com.samiapps.kv.contactapplication.Activities;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,8 +22,12 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.bumptech.glide.request.RequestOptions;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samiapps.kv.contactapplication.Helper.GlobalProvider;
 import com.samiapps.kv.contactapplication.Models.Contact;
+import com.samiapps.kv.contactapplication.Models.ContactResult;
 import com.samiapps.kv.contactapplication.Network.Constants;
 import com.samiapps.kv.contactapplication.Network.CustomRequest;
 import com.samiapps.kv.contactapplication.R;
@@ -30,6 +36,8 @@ import com.samiapps.kv.contactapplication.Utility.GlideApp;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,17 +80,22 @@ public class EditContactActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String url = Constants.base_url + "/" + contact.getId();
-                Log.d("curl", url);
-
                 CustomRequest customRequest = new CustomRequest(Request.Method.PATCH, url, params, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d("checkresponse", response.toString());
-                        String result= "Contact "+" Edited Successfully";
+
+                        String result= "Contact Updated Successfully";
                         Toast.makeText(EditContactActivity.this,result,Toast.LENGTH_SHORT).show();
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
+                                Intent intent=new Intent();
+
+                                intent.putExtra("firstName",firstNameText.getText().toString());
+                                intent.putExtra("lastName",lastNameText.getText().toString());
+
+                                setResult(Activity.RESULT_OK,intent);
+
                                 EditContactActivity.this.finish();
                             }
                         }, Toast.LENGTH_SHORT+1000);
@@ -94,7 +107,7 @@ public class EditContactActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("checkerror", error.toString());
+
                         String message=globalProvider.getErrorMessage(error);
                         Toast.makeText(EditContactActivity.this,message,Toast.LENGTH_LONG).show();
 

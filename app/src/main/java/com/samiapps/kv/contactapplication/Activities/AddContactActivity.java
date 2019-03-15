@@ -1,6 +1,8 @@
 package com.samiapps.kv.contactapplication.Activities;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -42,6 +44,7 @@ public class AddContactActivity extends AppCompatActivity {
     TextView save, cancel;
     GlobalProvider globalProvider;
     ImageView photoImageView;
+    int id;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,18 +86,30 @@ public class AddContactActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             String result="Contact "+response.getString("first_name")+" "+response.getString("last_name")+" added";
+                            id=response.getInt("id");
                             Toast.makeText(AddContactActivity.this,result,Toast.LENGTH_SHORT).show();
                             new Handler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
+                                    contact=new Contact();
+                                    contact.setFirstName(firstNameText.getText().toString());
+                                    contact.setLastName(lastNameText.getText().toString());
+                                    contact.setId(id);
+                                    Intent intent=new Intent();
+
+                                    intent.putExtra("contactAdded",contact);
+
+
+                                    setResult(Activity.RESULT_OK,intent);
                                     AddContactActivity.this.finish();
+
                                 }
                             }, Toast.LENGTH_SHORT+1000);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        Log.d("response",response.toString());
+
 
 
                     }

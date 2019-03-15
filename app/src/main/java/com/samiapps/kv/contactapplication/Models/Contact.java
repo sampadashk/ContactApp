@@ -6,6 +6,9 @@ import android.os.Parcelable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Objects;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 
@@ -92,5 +95,7 @@ public class Contact implements Parcelable {
         parcel.writeString(this.avatar);
 
     }
+
+
 }
 

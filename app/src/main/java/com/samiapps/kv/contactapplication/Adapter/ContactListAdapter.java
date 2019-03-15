@@ -1,5 +1,6 @@
 package com.samiapps.kv.contactapplication.Adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -23,6 +24,7 @@ import java.util.List;
 public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.ViewHolder>  {
     Context context;
     List<Contact> contactList;
+    public final int reqCode=100;
     public ContactListAdapter(Context context,List<Contact> contactList)
     {
         this.context=context;
@@ -41,14 +43,14 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
        final Contact contact= contactList.get(i);
        viewHolder.contactNameTextView.setText(contact.getFirstName()+" "+contact.getLastName());
         Log.d("checkname",contact.getFirstName());
-        GlideApp.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
+        GlideApp.with(context).load(contact.getAvatar()).placeholder(context.getResources().getDrawable(R.drawable.photo)).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
        // Glide.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(context,ContactDetail.class);
                 intent.putExtra("contact",contact);
-                context.startActivity(intent);
+                ((Activity) context).startActivityForResult(intent, reqCode);
             }
         });
 

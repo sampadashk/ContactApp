@@ -1,5 +1,6 @@
 package com.samiapps.kv.contactapplication.Activities;
 
+import android.app.Activity;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -33,9 +35,13 @@ import com.samiapps.kv.contactapplication.Network.Constants;
 import com.samiapps.kv.contactapplication.R;
 import com.samiapps.kv.contactapplication.Utility.PaginationScrollListener;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     RecyclerView contactListRecyclerView;
@@ -47,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     int page=1;
     int TOTAL_PAGES=1;
     ImageView addImageView;
+    final int ADD_Req_Code=5;
     
     private boolean isLoading = false;
     private boolean isLastPage = false;
@@ -102,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent=new Intent(MainActivity.this,AddContactActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent,ADD_Req_Code);
             }
         });
         loadContacts();
@@ -116,8 +123,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadNextContacts() {
         String url= Constants.base_url+"?"+tag_per_page+"="+totalItems+"&page="+page;
+        StringRequest stringRequest=new StringRequest(Request.Method.GET, url , new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
 
-        StringRequest commonRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                JsonFactory jsonFactory = new JsonFactory();
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                try {
+                    JsonParser jsonParser = jsonFactory.createParser(response);
+                    ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
+                    contactList.addAll(contactResult.getData());
+                    contactListAdapter.notifyDataSetChanged();
+                    if(contactResult.getPage()<TOTAL_PAGES)
+                    {
+                        isLoading=false;
+
+                    }
+                    else
+                    {
+                        isLastPage=true;
+                    }
+
+
+
+                } catch (JsonParseException e) {
+                    e.printStackTrace();
+                } catch (JsonMappingException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                String message=globalProvider.getErrorMessage(error);
+                Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
+
+            }
+        });
+        globalProvider.addRequest(stringRequest);
+
+       /* StringRequest commonRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 JsonFactory jsonFactory = new JsonFactory();
@@ -180,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         globalProvider.addRequest(commonRequest);
+        */
 
     }
     /*
@@ -191,10 +241,10 @@ public class MainActivity extends AppCompatActivity {
     */
 
     private void loadContacts() {
-        Log.d("loadcontactcalled","here");
-        String url= Constants.base_url+"?"+tag_per_page+"="+totalItems;
-       // url+="?"+"per_page="+10;
-        StringRequest commonRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+        String url= Constants.base_url+"?"+tag_per_page+"="+totalItems+"&page="+page;
+
+
+        StringRequest commonRequest = new StringRequest(Request.Method.GET,url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 JsonFactory jsonFactory = new JsonFactory();
@@ -204,24 +254,7 @@ public class MainActivity extends AppCompatActivity {
                     JsonParser jsonParser = jsonFactory.createParser(response);
                     ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
                     contactList.addAll(contactResult.getData());
-                    Log.d("contactlistsize",contactList.size()+"");
-
-
                     contactListAdapter.notifyDataSetChanged();
-                    ContentValues[] bulkToInsert;
-                    List<ContentValues> mValueList = new ArrayList<ContentValues>();
-                    for(Contact contact:contactList)
-                    {
-                        ContentValues mNewValues = new ContentValues();
-                        mNewValues.put(ContactContract.ContactC.Column_Contactid,contact.getId() );
-                        mNewValues.put(ContactContract.ContactC.COLUMN_FirstName,contact.getFirstName() );
-                        mNewValues.put(ContactContract.ContactC.COLUMN_LastName,contact.getLastName() );
-                        mNewValues.put(ContactContract.ContactC.COLUMN_Image,contact.getAvatar() );
-                        mValueList.add(mNewValues);
-                    }
-                    bulkToInsert = new ContentValues[mValueList.size()];
-                    mValueList.toArray(bulkToInsert);
-                    getContentResolver().bulkInsert(ContactContract.ContactC.Content_Uri, bulkToInsert);
                     TOTAL_PAGES=contactResult.getTotal_pages();
                     if(contactResult.getPage()<contactResult.getTotal_pages())
                     {
@@ -262,26 +295,35 @@ public class MainActivity extends AppCompatActivity {
     public void onStop()
     {
         super.onStop();
-        Uri uri = ContactContract.ContactC.Content_Uri;
-        String[] projection = new String[] {ContactContract.ContactC.Column_Contactid, ContactContract.ContactC.COLUMN_FirstName,ContactContract.ContactC.COLUMN_LastName,ContactContract.ContactC.COLUMN_Image};
-        String selection = null;
-        String[] selectionArgs = null;
-        String sortOrder = null;
-        Cursor cursor = getContentResolver().query(uri, projection, selection, selectionArgs,
-                sortOrder);
-        if (cursor != null) {
-            cursor.moveToFirst();
-            String name;
-            for (int i = 0; i < cursor.getCount(); i++){
-                name = cursor.getString(cursor
-                        .getColumnIndexOrThrow(ContactContract.ContactC.COLUMN_FirstName));
-                Log.d("name",name);
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        // check if the request code is same as what is passed  here it is 2
+        if(requestCode==contactListAdapter.reqCode&&resultCode== Activity.RESULT_OK)
+        {
+          Contact updatedContact= data.getParcelableExtra("updatedContact");
+          for(Contact contact:contactList)
+          {
+              if(updatedContact.getId().equals(contact.getId()))
+              {
+                  contact.setFirstName(updatedContact.getFirstName());
+                  contact.setLastName(updatedContact.getLastName());
+                  contactListAdapter.notifyDataSetChanged();
+                  break;
+              }
+          }
 
-                cursor.moveToNext();
-            }
-            // always close the cursor
-            cursor.close();
+
+
         }
+        else if(requestCode==ADD_Req_Code&&resultCode== Activity.RESULT_OK)
+        {
+            Contact addedContact= data.getParcelableExtra("contactAdded");
+            contactList.add(addedContact);
+            contactListAdapter.notifyDataSetChanged();
 
+        }
     }
 }

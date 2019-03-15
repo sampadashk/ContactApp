@@ -17,6 +17,7 @@ import com.android.volley.toolbox.Volley;
 public class GlobalProvider {
     private static GlobalProvider globalProviderInstance;
     private Context context;
+
     private static RequestQueue requestQueue;
     private GlobalProvider(Context context)
     {
