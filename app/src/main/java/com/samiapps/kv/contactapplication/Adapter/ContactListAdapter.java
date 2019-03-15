@@ -42,7 +42,6 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
        final Contact contact= contactList.get(i);
        viewHolder.contactNameTextView.setText(contact.getFirstName()+" "+contact.getLastName());
-        Log.d("checkname",contact.getFirstName());
         GlideApp.with(context).load(contact.getAvatar()).placeholder(context.getResources().getDrawable(R.drawable.photo)).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
        // Glide.with(context).load(contact.getAvatar()).apply(RequestOptions.circleCropTransform()).into(viewHolder.contactImageView);
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -62,7 +61,6 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
 
     @Override
     public int getItemCount() {
-        Log.d("checksize",contactList.size()+"");
         return contactList.size();
     }
 

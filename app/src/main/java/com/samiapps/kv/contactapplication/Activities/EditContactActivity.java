@@ -42,30 +42,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EditContactActivity extends AppCompatActivity {
-    EditText firstNameText,lastNameText;
+    EditText firstNameText, lastNameText;
     TextView contactIdText;
     Contact contact;
-    TextView save,cancel;
+    TextView save, cancel;
     GlobalProvider globalProvider;
     ImageView photoImageView;
-    Map<String,String> params=new HashMap();
+    Map<String, String> params = new HashMap();
 
 
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit_contact_layout);
-        firstNameText=(EditText) findViewById(R.id.first_name);
-        lastNameText=(EditText)findViewById(R.id.last_name);
-        contactIdText=(TextView)findViewById(R.id.contact_id);
-        photoImageView=(ImageView) findViewById(R.id.photo);
-        save=(TextView) findViewById(R.id.save);
-        cancel=(TextView) findViewById(R.id.cancel);
-        contact= (Contact) getIntent().getParcelableExtra("contact");
+        firstNameText = (EditText) findViewById(R.id.first_name);
+        lastNameText = (EditText) findViewById(R.id.last_name);
+        contactIdText = (TextView) findViewById(R.id.contact_id);
+        photoImageView = (ImageView) findViewById(R.id.photo);
+        save = (TextView) findViewById(R.id.save);
+        cancel = (TextView) findViewById(R.id.cancel);
+        contact = (Contact) getIntent().getParcelableExtra("contact");
         firstNameText.setText(contact.getFirstName());
         lastNameText.setText(contact.getLastName());
-        contactIdText.setText(contact.getId()+"");
-        globalProvider=GlobalProvider.getGlobalProviderInstance(this);
+        contactIdText.setText(contact.getId() + "");
+        globalProvider = GlobalProvider.getGlobalProviderInstance(this);
         firstNameText.addTextChangedListener(new GenericTextWatcher(firstNameText));
         lastNameText.addTextChangedListener(new GenericTextWatcher(lastNameText));
         GlideApp.with(this).load(R.drawable.photo).apply(RequestOptions.circleCropTransform()).into(photoImageView);
@@ -84,23 +83,21 @@ public class EditContactActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
 
-                        String result= "Contact Updated Successfully";
-                        Toast.makeText(EditContactActivity.this,result,Toast.LENGTH_SHORT).show();
+                        String result = "Contact Updated Successfully";
+                        Toast.makeText(EditContactActivity.this, result, Toast.LENGTH_SHORT).show();
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                Intent intent=new Intent();
+                                Intent intent = new Intent();
 
-                                intent.putExtra("firstName",firstNameText.getText().toString());
-                                intent.putExtra("lastName",lastNameText.getText().toString());
+                                intent.putExtra("firstName", firstNameText.getText().toString());
+                                intent.putExtra("lastName", lastNameText.getText().toString());
 
-                                setResult(Activity.RESULT_OK,intent);
+                                setResult(Activity.RESULT_OK, intent);
 
                                 EditContactActivity.this.finish();
                             }
-                        }, Toast.LENGTH_SHORT+1000);
-
-
+                        }, Toast.LENGTH_SHORT + 1000);
 
 
                     }
@@ -108,8 +105,8 @@ public class EditContactActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
 
-                        String message=globalProvider.getErrorMessage(error);
-                        Toast.makeText(EditContactActivity.this,message,Toast.LENGTH_LONG).show();
+                        String message = globalProvider.getErrorMessage(error);
+                        Toast.makeText(EditContactActivity.this, message, Toast.LENGTH_LONG).show();
 
                     }
                 });
@@ -120,26 +117,25 @@ public class EditContactActivity extends AppCompatActivity {
         });
 
 
-
-
-
     }
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             View v = getCurrentFocus();
-            if ( v instanceof EditText) {
+            if (v instanceof EditText) {
                 Rect outRect = new Rect();
                 v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                if (!outRect.contains((int) event.getRawX(), (int) event.getRawY())) {
                     v.clearFocus();
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
             }
         }
-        return super.dispatchTouchEvent( event );
+        return super.dispatchTouchEvent(event);
     }
+
     private class GenericTextWatcher implements TextWatcher {
 
         private View view;
@@ -169,7 +165,6 @@ public class EditContactActivity extends AppCompatActivity {
                     params.put("last_name", text);
                     break;
                 }
-
 
 
             }

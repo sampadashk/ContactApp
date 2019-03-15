@@ -48,31 +48,28 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<Contact> contactList;
     ContactListAdapter contactListAdapter;
     GlobalProvider globalProvider;
-    final String tag_per_page="per_page";
-    int totalItems=10;
-    int page=1;
-    int TOTAL_PAGES=1;
+    final String tag_per_page = "per_page";
+    int totalItems = 10;
+    int page = 1;
+    int TOTAL_PAGES = 1;
     ImageView addImageView;
-    final int ADD_Req_Code=5;
-    
+    final int ADD_Req_Code = 5;
+
     private boolean isLoading = false;
     private boolean isLastPage = false;
-
-
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("oncreatecc","oncreate");
         setContentView(R.layout.activity_main);
-        contactListRecyclerView=(RecyclerView)findViewById(R.id.recycler_contact_list);
-        addImageView=(ImageView) findViewById(R.id.add);
-        contactList=new ArrayList<>();
-        globalProvider=GlobalProvider.getGlobalProviderInstance(this);
-        contactListAdapter=new ContactListAdapter(this,contactList);
+        contactListRecyclerView = (RecyclerView) findViewById(R.id.recycler_contact_list);
+        addImageView = (ImageView) findViewById(R.id.add);
+        contactList = new ArrayList<>();
+        globalProvider = GlobalProvider.getGlobalProviderInstance(this);
+        contactListAdapter = new ContactListAdapter(this, contactList);
         contactListRecyclerView.setAdapter(contactListAdapter);
-        LinearLayoutManager linearLayoutManager=new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         contactListRecyclerView.setLayoutManager(linearLayoutManager);
 
         contactListRecyclerView.addItemDecoration(new DividerItemDecoration(this,
@@ -85,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
                 page += 1;
                 loadNextContacts();
 
-                
 
             }
 
@@ -108,22 +104,19 @@ public class MainActivity extends AppCompatActivity {
         addImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent=new Intent(MainActivity.this,AddContactActivity.class);
-                startActivityForResult(intent,ADD_Req_Code);
+                Intent intent = new Intent(MainActivity.this, AddContactActivity.class);
+                startActivityForResult(intent, ADD_Req_Code);
             }
         });
         loadContacts();
-
-
-
 
 
     }
 
 
     private void loadNextContacts() {
-        String url= Constants.base_url+"?"+tag_per_page+"="+totalItems+"&page="+page;
-        StringRequest stringRequest=new StringRequest(Request.Method.GET, url , new Response.Listener<String>() {
+        String url = Constants.base_url + "?" + tag_per_page + "=" + totalItems + "&page=" + page;
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
 
@@ -135,16 +128,12 @@ public class MainActivity extends AppCompatActivity {
                     ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
                     contactList.addAll(contactResult.getData());
                     contactListAdapter.notifyDataSetChanged();
-                    if(contactResult.getPage()<TOTAL_PAGES)
-                    {
-                        isLoading=false;
+                    if (contactResult.getPage() < TOTAL_PAGES) {
+                        isLoading = false;
 
+                    } else {
+                        isLastPage = true;
                     }
-                    else
-                    {
-                        isLastPage=true;
-                    }
-
 
 
                 } catch (JsonParseException e) {
@@ -159,14 +148,21 @@ public class MainActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                String message=globalProvider.getErrorMessage(error);
-                Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
+                String message = globalProvider.getErrorMessage(error);
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
 
             }
         });
         globalProvider.addRequest(stringRequest);
 
-       /* StringRequest commonRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+
+    }
+
+    private void loadContacts() {
+        String url = Constants.base_url + "?" + tag_per_page + "=" + totalItems + "&page=" + page;
+
+
+        StringRequest commonRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 JsonFactory jsonFactory = new JsonFactory();
@@ -175,39 +171,15 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JsonParser jsonParser = jsonFactory.createParser(response);
                     ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
-                    Log.d("checknewsize",contactResult.getData().size()+"");
                     contactList.addAll(contactResult.getData());
                     contactListAdapter.notifyDataSetChanged();
-                    Log.d("contactlistsize",contactList.size()+"");
+                    TOTAL_PAGES = contactResult.getTotal_pages();
+                    if (contactResult.getPage() < contactResult.getTotal_pages()) {
 
 
-                    Log.d("totalpages",TOTAL_PAGES+"");
-                    Log.d("getpage",contactResult.getPage()+"");
-                    ContentValues[] bulkToInsert;
-                    List<ContentValues> mValueList = new ArrayList<ContentValues>();
-                    for(Contact contact:contactResult.getData())
-                    {
-                        ContentValues mNewValues = new ContentValues();
-                        mNewValues.put(ContactContract.ContactC.Column_Contactid,contact.getId() );
-                        mNewValues.put(ContactContract.ContactC.COLUMN_FirstName,contact.getFirstName() );
-                        mNewValues.put(ContactContract.ContactC.COLUMN_LastName,contact.getLastName() );
-                        mNewValues.put(ContactContract.ContactC.COLUMN_Image,contact.getAvatar() );
-                        mValueList.add(mNewValues);
+                    } else {
+                        isLastPage = true;
                     }
-                    bulkToInsert = new ContentValues[mValueList.size()];
-                    mValueList.toArray(bulkToInsert);
-                    getContentResolver().bulkInsert(ContactContract.ContactC.Content_Uri, bulkToInsert);
-                   // TOTAL_PAGES=contactResult.getTotal_pages();
-                    if(contactResult.getPage()<TOTAL_PAGES)
-                    {
-                        isLoading=false;
-
-                    }
-                    else
-                    {
-                        isLastPage=true;
-                    }
-
 
 
                 } catch (JsonParseException e) {
@@ -223,67 +195,8 @@ public class MainActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
-                String message=globalProvider.getErrorMessage(error);
-                Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
-            }
-        });
-        globalProvider.addRequest(commonRequest);
-        */
-
-    }
-    /*
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList("contactListKey",  contactList);
-        super.onSaveInstanceState(outState);
-    }
-    */
-
-    private void loadContacts() {
-        String url= Constants.base_url+"?"+tag_per_page+"="+totalItems+"&page="+page;
-
-
-        StringRequest commonRequest = new StringRequest(Request.Method.GET,url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                JsonFactory jsonFactory = new JsonFactory();
-                ObjectMapper objectMapper = new ObjectMapper();
-
-                try {
-                    JsonParser jsonParser = jsonFactory.createParser(response);
-                    ContactResult contactResult = (ContactResult) objectMapper.readValue(jsonParser, ContactResult.class);
-                    contactList.addAll(contactResult.getData());
-                    contactListAdapter.notifyDataSetChanged();
-                    TOTAL_PAGES=contactResult.getTotal_pages();
-                    if(contactResult.getPage()<contactResult.getTotal_pages())
-                    {
-
-
-                    }
-                    else
-                    {
-                        isLastPage=true;
-                    }
-
-
-
-                } catch (JsonParseException e) {
-                    e.printStackTrace();
-                } catch (JsonMappingException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                //HANDLE RESPONSE
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error)
-            {
-                String message=globalProvider.getErrorMessage(error);
-                Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
+                String message = globalProvider.getErrorMessage(error);
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
 
 
             }
@@ -292,35 +205,29 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    public void onStop()
-    {
+
+    public void onStop() {
         super.onStop();
     }
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         // check if the request code is same as what is passed  here it is 2
-        if(requestCode==contactListAdapter.reqCode&&resultCode== Activity.RESULT_OK)
-        {
-          Contact updatedContact= data.getParcelableExtra("updatedContact");
-          for(Contact contact:contactList)
-          {
-              if(updatedContact.getId().equals(contact.getId()))
-              {
-                  contact.setFirstName(updatedContact.getFirstName());
-                  contact.setLastName(updatedContact.getLastName());
-                  contactListAdapter.notifyDataSetChanged();
-                  break;
-              }
-          }
+        if (requestCode == contactListAdapter.reqCode && resultCode == Activity.RESULT_OK) {
+            Contact updatedContact = data.getParcelableExtra("updatedContact");
+            for (Contact contact : contactList) {
+                if (updatedContact.getId().equals(contact.getId())) {
+                    contact.setFirstName(updatedContact.getFirstName());
+                    contact.setLastName(updatedContact.getLastName());
+                    contactListAdapter.notifyDataSetChanged();
+                    break;
+                }
+            }
 
 
-
-        }
-        else if(requestCode==ADD_Req_Code&&resultCode== Activity.RESULT_OK)
-        {
-            Contact addedContact= data.getParcelableExtra("contactAdded");
+        } else if (requestCode == ADD_Req_Code && resultCode == Activity.RESULT_OK) {
+            Contact addedContact = data.getParcelableExtra("contactAdded");
             contactList.add(addedContact);
             contactListAdapter.notifyDataSetChanged();
 

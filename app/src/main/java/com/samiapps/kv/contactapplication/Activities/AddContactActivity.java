@@ -53,7 +53,7 @@ public class AddContactActivity extends AppCompatActivity {
         lastNameText = (EditText) findViewById(R.id.last_name);
         save = (TextView) findViewById(R.id.save);
         cancel = (TextView) findViewById(R.id.cancel);
-        photoImageView=(ImageView) findViewById(R.id.photo);
+        photoImageView = (ImageView) findViewById(R.id.photo);
         globalProvider = GlobalProvider.getGlobalProviderInstance(AddContactActivity.this);
         GlideApp.with(this).load(R.drawable.photo).apply(RequestOptions.circleCropTransform()).into(photoImageView);
 
@@ -85,39 +85,38 @@ public class AddContactActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            String result="Contact "+response.getString("first_name")+" "+response.getString("last_name")+" added";
-                            id=response.getInt("id");
-                            Toast.makeText(AddContactActivity.this,result,Toast.LENGTH_SHORT).show();
+                            String result = "Contact " + response.getString("first_name") + " " + response.getString("last_name") + " added";
+                            id = response.getInt("id");
+                            Toast.makeText(AddContactActivity.this, result, Toast.LENGTH_SHORT).show();
                             new Handler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    contact=new Contact();
+                                    contact = new Contact();
                                     contact.setFirstName(firstNameText.getText().toString());
                                     contact.setLastName(lastNameText.getText().toString());
                                     contact.setId(id);
-                                    Intent intent=new Intent();
+                                    Intent intent = new Intent();
 
-                                    intent.putExtra("contactAdded",contact);
+                                    intent.putExtra("contactAdded", contact);
 
 
-                                    setResult(Activity.RESULT_OK,intent);
+                                    setResult(Activity.RESULT_OK, intent);
                                     AddContactActivity.this.finish();
 
                                 }
-                            }, Toast.LENGTH_SHORT+1000);
+                            }, Toast.LENGTH_SHORT + 1000);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
 
 
-
                     }
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        String message=globalProvider.getErrorMessage(error);
-                        Toast.makeText(AddContactActivity.this,message,Toast.LENGTH_LONG).show();
+                        String message = globalProvider.getErrorMessage(error);
+                        Toast.makeText(AddContactActivity.this, message, Toast.LENGTH_LONG).show();
 
                     }
                 });
